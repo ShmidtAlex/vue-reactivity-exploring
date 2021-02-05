@@ -1,4 +1,5 @@
 <script>
+
   class Dep {//means dependency
     constructor() {
       this.subscribers = []//it's a storage for subsribers, according to observer pattern
@@ -14,21 +15,44 @@
       this.subscribers.forEach(sub => sub())
     }
   }
+  //instead of this:
 
-  const dep = new Dep();
-  let price = 5;
-  let quantity = 2;
-  let total = 0;
+  // const dep = new Dep();  
+  // let price = 5;
+  // let quantity = 2;
 
+  //implementing this more scalable variant:
+  let data = { price: 5, quantity: 2 }
+  let total, target, sapePrice;
+
+  //in order to figure out, which property was changed:
+  Object.keys(data).forEach(key => {
+    let internalValue = data[key];
+    const dep = new Dep();
+    Object.defineProperty(data, key, {
+      get() {
+        dep.depend()
+        console.log(`I was accesed: ${key} : ${internalValue}`)
+        return internalValue;
+      },
+       set(newVal) {
+        console.log(`I was changed: ${key} to ${newVal}`)
+        internalValue = newVal;
+        dep.notyfy()
+      }
+    }) 
+  })
   
   let watcher = (myFunc) => {
     target = myFunc;
-    dep.depend();
     target();
     target = null;
   }
   watcher(() => {
-     total = price * quantity;
+     total = data.price * data.quantity;
+  })
+  watcher(() => {
+     salePrice = data.price * 0.9;
   })
   
 </script>
