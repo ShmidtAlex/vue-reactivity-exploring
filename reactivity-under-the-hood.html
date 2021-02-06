@@ -1,48 +1,43 @@
 <script>
 
-  class Dep {//means dependency
+  class Dep {
     constructor() {
-      this.subscribers = []//it's a storage for subsribers, according to observer pattern
+      this.subscribers = []
     }
-    //instead of record() on main branch - to save target:
     depend() {
       if (target && !this.subscribers.includes(target)){
         this.subscribers.push(target)
       }
     }
-    //instead of replay() on main branch: 
     notyfy() {
       this.subscribers.forEach(sub => sub())
     }
   }
-  //instead of this:
+  let deps = new Map()
 
-  // const dep = new Dep();  
-  // let price = 5;
-  // let quantity = 2;
 
-  //implementing this more scalable variant:
   let data = { price: 5, quantity: 2 }
-  let total, target, sapePrice;
+  let total, target, salePrice;
 
-  //in order to figure out, which property was changed:
   Object.keys(data).forEach(key => {
-    let internalValue = data[key];
-    const dep = new Dep();
-    Object.defineProperty(data, key, {
-      get() {
-        dep.depend()
-        console.log(`I was accesed: ${key} : ${internalValue}`)
-        return internalValue;
-      },
-       set(newVal) {
-        console.log(`I was changed: ${key} to ${newVal}`)
-        internalValue = newVal;
-        dep.notyfy()
-      }
-    }) 
+      deps.set(key, new Dep())
   })
-  
+  console.log(deps)
+
+  let data_without_proxy = data
+
+  data = new Proxy(data_without_proxy, {
+    get(obj, key) {
+      deps.get(key).depend();
+      return obj[key];
+    },
+    set(obj, key, newVal) {
+      obj[key] = newVal;
+      deps.get(key).notyfy();
+      return true;
+    }
+  })
+
   let watcher = (myFunc) => {
     target = myFunc;
     target();
@@ -54,5 +49,18 @@
   watcher(() => {
      salePrice = data.price * 0.9;
   })
+
+  console.log('total = ' + total)
+  data.price = 100;
+  console.log('total = ' + total)
+  data.quantity = 40;
+  console.log('total = ' + total)
   
+  deps.set('discount', new Dep());
+  data['discount'] = 5
+
+  watcher(() => {
+    salePrice = data.price - data.discount
+  })
+  console.log('salePrice =' + salePrice)
 </script>

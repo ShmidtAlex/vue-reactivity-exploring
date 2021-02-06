@@ -9,5 +9,5 @@
 
 	- watcher,
 	- getter/setter
-	- Object.defineProperty()
-	- Object.keys()
+	- while Object.defineProperty() mutating data, we should use:
+	- Proxy() contstructor
